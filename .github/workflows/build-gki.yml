@@ -1,0 +1,52 @@
+name: Build fuxi GKI
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuxi-gki-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: android13-5.15.178 + SukiSU Ultra + SUSFS
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    steps:
+      - name: Check out pipeline
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Free runner disk space
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
+          df -h /
+
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            bc bison build-essential ccache flex git kmod libelf-dev \
+            libssl-dev lz4 pahole python3 repo rsync zip
+
+      - name: Build pinned GKI
+        shell: bash
+        env:
+          KERNEL_WORKSPACE: ${{ runner.temp }}/android-kernel
+        run: bash scripts/build-gki.sh
+
+      - name: Upload kernel artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: fuxi-gki-5.15.178-sukisu-susfs
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

@@ -1,0 +1,6 @@
+device-info/
+out/
+dist/
+android-kernel/
+*.img
+*.zip
