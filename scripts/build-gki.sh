@@ -40,7 +40,9 @@ repo init \
   --depth=1
 repo sync -c -j2 --fail-fast --no-clone-bundle
 
-git -C common fetch --depth=1 origin "refs/tags/${GKI_TAG}:refs/tags/${GKI_TAG}"
+git -C common fetch --depth=1 \
+  https://android.googlesource.com/kernel/common \
+  "refs/tags/${GKI_TAG}:refs/tags/${GKI_TAG}"
 git -C common checkout --detach "$GKI_TAG"
 test "$(git -C common rev-parse HEAD)" = "$GKI_COMMIT"
 
