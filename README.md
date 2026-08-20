@@ -52,7 +52,9 @@ Không relock bootloader khi đang dùng kernel hoặc boot image đã sửa.
 
 Workflow `.github/workflows/build-gki.yml` chạy thủ công và build đúng một
 target: `android13-5.15.178_r00` với SukiSU Ultra + SUSFS. Các nguồn và GitHub
-Actions đều được pin bằng commit.
+Actions đều được pin bằng commit. Nhánh SukiSU `builtin` bật KSU và SUSFS bằng
+Kconfig mặc định, vì vậy pipeline giữ nguyên `gki_defconfig` chuẩn để vượt qua
+kiểm tra reproducibility của Android kernel build.
 
 Artifact bao gồm:
 

@@ -70,26 +70,6 @@ cp "${susfs_dir}/kernel_patches/include/linux/"* common/include/linux/
 patch --directory=common --strip=1 --fuzz=2 --dry-run < "$kernel_patch"
 patch --directory=common --strip=1 --fuzz=2 < "$kernel_patch"
 
-defconfig="common/arch/arm64/configs/gki_defconfig"
-while IFS= read -r config_line; do
-  case "$config_line" in
-    CONFIG_*=y)
-      common/scripts/config --file "$defconfig" -e "${config_line%%=*}"
-      ;;
-    '# CONFIG_'*' is not set')
-      config_name="${config_line#\# }"
-      config_name="${config_name% is not set}"
-      common/scripts/config --file "$defconfig" -d "$config_name"
-      ;;
-    ''|'#'*)
-      ;;
-    *)
-      echo "Unsupported config fragment line: $config_line" >&2
-      exit 1
-      ;;
-  esac
-done < "${PROJECT_ROOT}/config/sukisu-susfs.fragment"
-
 export KBUILD_BUILD_USER="build-user"
 export KBUILD_BUILD_HOST="build-host"
 export BUILD_CONFIG="common/build.config.gki.aarch64"
