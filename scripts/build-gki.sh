@@ -84,7 +84,19 @@ export KBUILD_BUILD_USER="build-user"
 export KBUILD_BUILD_HOST="build-host"
 export BUILD_CONFIG="common/build.config.gki.aarch64"
 
-build/build.sh
+build/build.sh &
+build_pid=$!
+
+# LLD can be silent for many minutes during the ThinLTO link. Emit a small
+# heartbeat so the hosted runner does not treat the active build as idle.
+while kill -0 "$build_pid" 2>/dev/null; do
+  sleep 60
+  if kill -0 "$build_pid" 2>/dev/null; then
+    echo "Kernel build is still running (pid=${build_pid})"
+    free -h
+  fi
+done
+wait "$build_pid"
 
 image_path="$(find out -type f -name Image -path '*/dist/*' -print -quit)"
 test -n "$image_path"
