@@ -70,6 +70,16 @@ cp "${susfs_dir}/kernel_patches/include/linux/"* common/include/linux/
 patch --directory=common --strip=1 --fuzz=2 --dry-run < "$kernel_patch"
 patch --directory=common --strip=1 --fuzz=2 < "$kernel_patch"
 
+# GitHub-hosted private-repository runners have limited RAM. Keep ThinLTO
+# enabled for GKI/CFI compatibility, but serialize its backend workers to
+# avoid the linker being killed at its peak memory usage.
+cat >> common/Makefile <<'MAKEFILE'
+
+ifdef CONFIG_LTO_CLANG_THIN
+KBUILD_LDFLAGS += --thinlto-jobs=1
+endif
+MAKEFILE
+
 export KBUILD_BUILD_USER="build-user"
 export KBUILD_BUILD_HOST="build-host"
 export BUILD_CONFIG="common/build.config.gki.aarch64"
