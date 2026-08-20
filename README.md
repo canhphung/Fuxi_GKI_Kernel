@@ -56,6 +56,12 @@ Actions đều được pin bằng commit. Nhánh SukiSU `builtin` bật KSU và
 Kconfig mặc định, vì vậy pipeline giữ nguyên `gki_defconfig` chuẩn để vượt qua
 kiểm tra reproducibility của Android kernel build.
 
+Runner chuẩn của GitHub cho repository private chỉ có 8 GB RAM. ThinLTO của
+kernel này vượt quá cả RAM và swap mặc định, vì vậy pipeline đặt `LTO=none`
+theo chế độ được Android kernel build system hỗ trợ. Artifact CI dùng để kiểm
+tra tích hợp SukiSU/SUSFS; trước khi flash hằng ngày nên build lại với ThinLTO
+và CFI trên máy/self-hosted runner có ít nhất 16 GB RAM để khớp cấu hình stock.
+
 Artifact bao gồm:
 
 - `Image`;

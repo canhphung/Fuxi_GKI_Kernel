@@ -25,10 +25,6 @@ jobs:
         run: |
           set -euxo pipefail
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
-          sudo fallocate -l 8G /mnt/extra-swapfile
-          sudo chmod 600 /mnt/extra-swapfile
-          sudo mkswap /mnt/extra-swapfile
-          sudo swapon /mnt/extra-swapfile
           free -h
           df -h /
 

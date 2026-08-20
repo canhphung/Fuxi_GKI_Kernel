@@ -70,19 +70,12 @@ cp "${susfs_dir}/kernel_patches/include/linux/"* common/include/linux/
 patch --directory=common --strip=1 --fuzz=2 --dry-run < "$kernel_patch"
 patch --directory=common --strip=1 --fuzz=2 < "$kernel_patch"
 
-# GitHub-hosted private-repository runners have limited RAM. Keep ThinLTO
-# enabled for GKI/CFI compatibility, but serialize its backend workers to
-# avoid the linker being killed at its peak memory usage.
-cat >> common/Makefile <<'MAKEFILE'
-
-ifdef CONFIG_LTO_CLANG_THIN
-KBUILD_LDFLAGS += --thinlto-jobs=1
-endif
-MAKEFILE
-
 export KBUILD_BUILD_USER="build-user"
 export KBUILD_BUILD_HOST="build-host"
 export BUILD_CONFIG="common/build.config.gki.aarch64"
+# Standard GitHub-hosted runners for private repositories have 8 GiB RAM.
+# Android's supported non-LTO build mode avoids ThinLTO exhausting that VM.
+export LTO="none"
 
 build/build.sh &
 build_pid=$!
@@ -122,6 +115,7 @@ susfs_repo=${SUSFS_REPO}
 susfs_branch=${SUSFS_BRANCH}
 susfs_commit=${SUSFS_COMMIT}
 build_config=${BUILD_CONFIG}
+lto=${LTO}
 METADATA
 
 (
