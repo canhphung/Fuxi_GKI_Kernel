@@ -64,13 +64,13 @@ test "$(git -C "$susfs_dir" rev-parse HEAD)" = "$SUSFS_COMMIT"
 ksu_patch="${susfs_dir}/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch"
 kernel_patch="${susfs_dir}/kernel_patches/50_add_susfs_in_gki-android13-5.15.patch"
 
-git -C KernelSU apply --check "$ksu_patch"
-git -C KernelSU apply "$ksu_patch"
+patch --directory=KernelSU --strip=1 --fuzz=2 --dry-run < "$ksu_patch"
+patch --directory=KernelSU --strip=1 --fuzz=2 < "$ksu_patch"
 
 cp "${susfs_dir}/kernel_patches/fs/"* common/fs/
 cp "${susfs_dir}/kernel_patches/include/linux/"* common/include/linux/
-git -C common apply --check "$kernel_patch"
-git -C common apply "$kernel_patch"
+patch --directory=common --strip=1 --fuzz=2 --dry-run < "$kernel_patch"
+patch --directory=common --strip=1 --fuzz=2 < "$kernel_patch"
 
 defconfig="common/arch/arm64/configs/gki_defconfig"
 while IFS= read -r config_line; do
