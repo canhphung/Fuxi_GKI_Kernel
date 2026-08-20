@@ -11,7 +11,9 @@ readonly GKI_TAG="android13-5.15.178_r00"
 readonly GKI_COMMIT="058abb720bd1570acf1c8721b1efa0c1850b5032"
 
 readonly SUKISU_REPO="https://github.com/SukiSU-Ultra/SukiSU-Ultra.git"
-readonly SUKISU_COMMIT="197cad8838da8d6cdf80356678e6100ce5e27a41"
+readonly SUKISU_BRANCH="builtin"
+readonly SUKISU_SETUP_COMMIT="197cad8838da8d6cdf80356678e6100ce5e27a41"
+readonly SUKISU_COMMIT="5a2bb7e5813002ccaabe02fa864cfb2dde6b5109"
 readonly SUKISU_SETUP_SHA256="0ea8369c334a116ee94076cce834eb585a3ecbb949d7d3c29253d9beefd43bf0"
 
 readonly SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"
@@ -48,7 +50,7 @@ test "$(git -C common rev-parse HEAD)" = "$GKI_COMMIT"
 
 setup_script="$(mktemp)"
 curl --fail --location --retry 3 \
-  "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/${SUKISU_COMMIT}/kernel/setup.sh" \
+  "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/${SUKISU_SETUP_COMMIT}/kernel/setup.sh" \
   --output "$setup_script"
 echo "${SUKISU_SETUP_SHA256}  ${setup_script}" | sha256sum --check
 bash "$setup_script" "$SUKISU_COMMIT"
@@ -61,11 +63,7 @@ git -C "$susfs_dir" fetch --depth=1 origin "$SUSFS_COMMIT"
 git -C "$susfs_dir" checkout --detach FETCH_HEAD
 test "$(git -C "$susfs_dir" rev-parse HEAD)" = "$SUSFS_COMMIT"
 
-ksu_patch="${susfs_dir}/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch"
 kernel_patch="${susfs_dir}/kernel_patches/50_add_susfs_in_gki-android13-5.15.patch"
-
-patch --directory=KernelSU --strip=1 --fuzz=2 --dry-run < "$ksu_patch"
-patch --directory=KernelSU --strip=1 --fuzz=2 < "$ksu_patch"
 
 cp "${susfs_dir}/kernel_patches/fs/"* common/fs/
 cp "${susfs_dir}/kernel_patches/include/linux/"* common/include/linux/
@@ -116,6 +114,7 @@ manifest_branch=${MANIFEST_BRANCH}
 gki_tag=${GKI_TAG}
 gki_commit=${GKI_COMMIT}
 sukisu_repo=${SUKISU_REPO}
+sukisu_branch=${SUKISU_BRANCH}
 sukisu_commit=${SUKISU_COMMIT}
 susfs_repo=${SUSFS_REPO}
 susfs_branch=${SUSFS_BRANCH}
