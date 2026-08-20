@@ -59,8 +59,10 @@ kiểm tra reproducibility của Android kernel build.
 Runner chuẩn của GitHub cho repository private chỉ có 8 GB RAM. ThinLTO của
 kernel này vượt quá cả RAM và swap mặc định, vì vậy pipeline đặt `LTO=none`
 theo chế độ được Android kernel build system hỗ trợ. Artifact CI dùng để kiểm
-tra tích hợp SukiSU/SUSFS; trước khi flash hằng ngày nên build lại với ThinLTO
-và CFI trên máy/self-hosted runner có ít nhất 16 GB RAM để khớp cấu hình stock.
+tra tích hợp SukiSU/SUSFS. Strict KMI symbol-list check cũng được tắt vì danh
+sách stock yêu cầu hai symbol chỉ tồn tại khi bật CFI; `Module.symvers` vẫn được
+lưu trong artifact. Trước khi flash hằng ngày nên build lại với ThinLTO và CFI
+trên máy/self-hosted runner có ít nhất 16 GB RAM để khớp cấu hình stock.
 
 Artifact bao gồm:
 

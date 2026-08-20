@@ -76,6 +76,9 @@ export BUILD_CONFIG="common/build.config.gki.aarch64"
 # Standard GitHub-hosted runners for private repositories have 8 GiB RAM.
 # Android's supported non-LTO build mode avoids ThinLTO exhausting that VM.
 export LTO="none"
+# The stock strict list contains CFI-only symbols that cannot exist when LTO
+# is disabled. Keep Module.symvers, but skip that incompatible strict check.
+export KMI_SYMBOL_LIST_STRICT_MODE="0"
 
 build/build.sh &
 build_pid=$!
@@ -116,6 +119,7 @@ susfs_branch=${SUSFS_BRANCH}
 susfs_commit=${SUSFS_COMMIT}
 build_config=${BUILD_CONFIG}
 lto=${LTO}
+kmi_symbol_list_strict_mode=${KMI_SYMBOL_LIST_STRICT_MODE}
 METADATA
 
 (
