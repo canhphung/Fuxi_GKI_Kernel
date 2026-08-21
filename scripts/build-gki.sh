@@ -20,6 +20,11 @@ readonly SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"
 readonly SUSFS_BRANCH="gki-android13-5.15"
 readonly SUSFS_COMMIT="068fff681035d5447f6107a3c63c2e4e23cb735f"
 
+readonly DROIDSPACES_REPO="https://github.com/ravindu644/Droidspaces-OSS.git"
+readonly DROIDSPACES_COMMIT="3736fd4fb021e309d50d949cb62e82fcfafd4de7"
+readonly STOCK_KERNEL_RELEASE="5.15.178-android13-8-00021-g6f2f96be86b9-ab13729987"
+readonly STOCK_LOCALVERSION="-android13-8-00021-g6f2f96be86b9-ab13729987"
+
 require_command() {
   command -v "$1" >/dev/null 2>&1 || {
     echo "Missing required command: $1" >&2
@@ -70,15 +75,39 @@ cp "${susfs_dir}/kernel_patches/include/linux/"* common/include/linux/
 patch --directory=common --strip=1 --fuzz=2 --dry-run < "$kernel_patch"
 patch --directory=common --strip=1 --fuzz=2 < "$kernel_patch"
 
+droidspaces_dir="${WORK_DIR}/Droidspaces-OSS"
+git init "$droidspaces_dir"
+git -C "$droidspaces_dir" remote add origin "$DROIDSPACES_REPO"
+git -C "$droidspaces_dir" fetch --depth=1 origin "$DROIDSPACES_COMMIT"
+git -C "$droidspaces_dir" checkout --detach FETCH_HEAD
+test "$(git -C "$droidspaces_dir" rev-parse HEAD)" = "$DROIDSPACES_COMMIT"
+
+droidspaces_patch="${droidspaces_dir}/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch"
+patch --directory=common --strip=1 --fuzz=0 --dry-run < "$droidspaces_patch"
+patch --directory=common --strip=1 --fuzz=0 < "$droidspaces_patch"
+
+gki_defconfig="common/arch/arm64/configs/gki_defconfig"
+droidspaces_configs=(
+  SYSVIPC POSIX_MQUEUE IPC_NS PID_NS DEVTMPFS
+  NETFILTER_XT_MATCH_ADDRTYPE USER_NS
+  NETFILTER_XT_TARGET_REJECT NETFILTER_XT_TARGET_LOG
+  NETFILTER_XT_MATCH_RECENT IP_SET IP_SET_HASH_IP IP_SET_HASH_NET
+  NETFILTER_XT_SET TMPFS_POSIX_ACL TMPFS_XATTR
+  BINFMT_MISC BINFMT_SCRIPT BINFMT_ELF
+)
+for config_name in "${droidspaces_configs[@]}"; do
+  common/scripts/config --file "$gki_defconfig" --enable "$config_name"
+done
+
+# Force the release string to match the stock kernel identity supplied for
+# fuxi. Android's setlocalversion uses this file before consulting Git state.
+printf '%s\n' "$STOCK_LOCALVERSION" > common/.scmversion
+
 export KBUILD_BUILD_USER="build-user"
 export KBUILD_BUILD_HOST="build-host"
 export BUILD_CONFIG="common/build.config.gki.aarch64"
-# Standard GitHub-hosted runners for private repositories have 8 GiB RAM.
-# Android's supported non-LTO build mode avoids ThinLTO exhausting that VM.
-export LTO="none"
-# The stock strict list contains CFI-only symbols that cannot exist when LTO
-# is disabled. Keep Module.symvers, but skip that incompatible strict check.
-export KMI_SYMBOL_LIST_STRICT_MODE="0"
+export LTO="thin"
+export KMI_SYMBOL_LIST_STRICT_MODE="1"
 
 build/build.sh &
 build_pid=$!
@@ -97,14 +126,25 @@ wait "$build_pid"
 image_path="$(find out -type f -name Image -path '*/dist/*' -print -quit)"
 test -n "$image_path"
 
+config_path="$(find out -type f -name .config -print -quit)"
+test -n "$config_path"
+for config_name in "${droidspaces_configs[@]}"; do
+  grep -qx "CONFIG_${config_name}=y" "$config_path"
+done
+
+kernel_release_path="$(find out -type f -name kernel.release -print -quit)"
+test -n "$kernel_release_path"
+test "$(cat "$kernel_release_path")" = "$STOCK_KERNEL_RELEASE"
+
 cp "$image_path" "${DIST_DIR}/Image"
 
-for artifact_name in System.map Module.symvers .config; do
+for artifact_name in System.map Module.symvers; do
   artifact_path="$(find out -type f -name "$artifact_name" -print -quit || true)"
   if [[ -n "$artifact_path" ]]; then
     cp "$artifact_path" "${DIST_DIR}/${artifact_name}"
   fi
 done
+cp "$config_path" "${DIST_DIR}/.config"
 
 cat > "${DIST_DIR}/build-metadata.txt" <<METADATA
 manifest=${MANIFEST_URL}
@@ -117,6 +157,9 @@ sukisu_commit=${SUKISU_COMMIT}
 susfs_repo=${SUSFS_REPO}
 susfs_branch=${SUSFS_BRANCH}
 susfs_commit=${SUSFS_COMMIT}
+droidspaces_repo=${DROIDSPACES_REPO}
+droidspaces_commit=${DROIDSPACES_COMMIT}
+kernel_release=${STOCK_KERNEL_RELEASE}
 build_config=${BUILD_CONFIG}
 lto=${LTO}
 kmi_symbol_list_strict_mode=${KMI_SYMBOL_LIST_STRICT_MODE}

@@ -1,4 +1,4 @@
-name: Build fuxi GKI
+name: Build Fuxi GKI Kernel
 
 on:
   workflow_dispatch:
@@ -7,12 +7,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: fuxi-gki-${{ github.ref }}
+  group: fuxi-gki-kernel-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build:
-    name: android13-5.15.178 + SukiSU Ultra + SUSFS
+    name: GKI 5.15.178 + SukiSU Ultra + SUSFS + Droidspaces
     runs-on: ubuntu-24.04
     timeout-minutes: 180
 
@@ -37,6 +37,18 @@ jobs:
             bc bison build-essential ccache flex git kmod libelf-dev \
             libssl-dev lz4 pahole python3 repo rsync zip
 
+      - name: Configure 16 GB swap for ThinLTO
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo swapoff /swapfile || true
+          sudo rm -f /swapfile
+          sudo fallocate -l 16G /mnt/swapfile
+          sudo chmod 600 /mnt/swapfile
+          sudo mkswap /mnt/swapfile
+          sudo swapon /mnt/swapfile
+          free -h
+
       - name: Build pinned GKI
         shell: bash
         env:
@@ -46,7 +58,7 @@ jobs:
       - name: Upload kernel artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: fuxi-gki-5.15.178-sukisu-susfs
+          name: Fuxi-GKI-5.15.178-SukiSU-SUSFS-Droidspaces
           path: dist/
           if-no-files-found: error
           retention-days: 14
