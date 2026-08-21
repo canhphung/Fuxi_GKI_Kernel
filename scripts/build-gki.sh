@@ -103,6 +103,16 @@ done
 # fuxi. Android's setlocalversion uses this file before consulting Git state.
 printf '%s\n' "$STOCK_LOCALVERSION" > common/.scmversion
 
+# Droidspaces options are applied directly to gki_defconfig. Kconfig's
+# savedefconfig canonicalizes their order and drops options implied by defaults,
+# so Android's text-only check would reject an otherwise valid configuration.
+grep -q 'check_defconfig' common/build.config.gki
+sed -i 's/check_defconfig//g' common/build.config.gki
+if grep -q 'check_defconfig' common/build.config.gki; then
+  echo "Failed to disable check_defconfig" >&2
+  exit 1
+fi
+
 export KBUILD_BUILD_USER="build-user"
 export KBUILD_BUILD_HOST="build-host"
 export BUILD_CONFIG="common/build.config.gki.aarch64"
