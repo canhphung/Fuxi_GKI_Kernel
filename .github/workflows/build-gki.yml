@@ -35,7 +35,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             bc bison build-essential ccache flex git kmod libelf-dev \
-            libssl-dev lz4 pahole python3 repo rsync zip
+            libssl-dev lz4 pahole python3 repo rsync unzip zip
 
       - name: Configure 16 GB swap for ThinLTO
         shell: bash
@@ -55,10 +55,10 @@ jobs:
           KERNEL_WORKSPACE: ${{ runner.temp }}/android-kernel
         run: bash scripts/build-gki.sh
 
-      - name: Upload kernel artifacts
+      - name: Upload AnyKernel3 and build artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: Fuxi-GKI-5.15.178-SukiSU-SUSFS-Droidspaces
+          name: Fuxi-GKI-5.15.178-AnyKernel3
           path: dist/
           if-no-files-found: error
           retention-days: 14

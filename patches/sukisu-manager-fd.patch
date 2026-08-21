@@ -1,0 +1,9 @@
+diff --git a/kernel/supercall/supercall.c b/kernel/supercall/supercall.c
+--- a/kernel/supercall/supercall.c
++++ b/kernel/supercall/supercall.c
+@@ -24,1 +24,4 @@ int ksu_install_fd(void)
+-    fd = get_unused_fd_flags(O_CLOEXEC);
++    /* The manager receives this descriptor across an exec boundary. Keeping
++     * FD_CLOEXEC here makes builtin SukiSU appear unavailable on some ROMs.
++     */
++    fd = get_unused_fd_flags(0);
