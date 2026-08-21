@@ -13,8 +13,12 @@ Kernel release được đặt thành:
 ```
 
 Chạy workflow **Build Fuxi GKI Kernel** thủ công trong GitHub Actions. Artifact
-gồm `Image`, `.config`, `System.map`, `Module.symvers`, metadata và checksum.
+gồm ZIP AnyKernel3 có thể flash, `Image`, `.config`, metadata và checksum.
 
-Pipeline không đóng gói hoặc flash `boot.img`. Hãy dùng đúng boot image của ROM
-đang chạy. Khi dùng Droidspaces cùng SUSFS, phải tắt **Hide SUS mounts for all
-processes** trong SUSFS4KSU để container có thể khởi động.
+Flash file `Fuxi_GKI_5.15.178_SukiSU_SUSFS_Droidspaces_AnyKernel3.zip` bằng
+recovery hoặc ứng dụng kernel flasher. Gói chỉ hỗ trợ `fuxi`, tự chọn slot đang
+hoạt động và thay `Image` trong boot hiện tại. Nên sao lưu boot của đúng bản ROM
+trước khi flash để có thể khôi phục nếu máy không khởi động.
+
+Khi dùng Droidspaces cùng SUSFS, phải tắt **Hide SUS mounts for all processes**
+trong SUSFS4KSU để container có thể khởi động.

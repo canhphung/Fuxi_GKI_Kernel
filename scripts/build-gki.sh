@@ -118,6 +118,9 @@ export KBUILD_BUILD_HOST="build-host"
 export BUILD_CONFIG="common/build.config.gki.aarch64"
 export LTO="thin"
 export KMI_SYMBOL_LIST_STRICT_MODE="1"
+# The pipeline packages the raw Image with AnyKernel3. Android's optional GKI
+# boot image archive is unnecessary here and can fail after a successful link.
+export GKI_BUILD_CONFIG_FRAGMENT="${PROJECT_ROOT}/configs/fuxi-build.config"
 
 build/build.sh &
 build_pid=$!
@@ -156,6 +159,9 @@ for artifact_name in System.map Module.symvers; do
 done
 cp "$config_path" "${DIST_DIR}/.config"
 
+bash "${PROJECT_ROOT}/scripts/package-anykernel3.sh" \
+  "${DIST_DIR}/Image" "${DIST_DIR}"
+
 cat > "${DIST_DIR}/build-metadata.txt" <<METADATA
 manifest=${MANIFEST_URL}
 manifest_branch=${MANIFEST_BRANCH}
@@ -173,12 +179,16 @@ kernel_release=${STOCK_KERNEL_RELEASE}
 build_config=${BUILD_CONFIG}
 lto=${LTO}
 kmi_symbol_list_strict_mode=${KMI_SYMBOL_LIST_STRICT_MODE}
+gki_build_config_fragment=${GKI_BUILD_CONFIG_FRAGMENT}
+anykernel_repo=https://github.com/osm0sis/AnyKernel3.git
+anykernel_commit=e4b1bb25ca2aabcfd57f694a5998d87130701b71
 METADATA
 
 (
   cd "$DIST_DIR"
-  sha256sum Image System.map Module.symvers .config build-metadata.txt 2>/dev/null \
-    > SHA256SUMS
+  find . -maxdepth 1 -type f ! -name SHA256SUMS -printf '%f\n' \
+    | LC_ALL=C sort \
+    | xargs sha256sum > SHA256SUMS
 )
 
 echo "Build artifacts written to ${DIST_DIR}"
