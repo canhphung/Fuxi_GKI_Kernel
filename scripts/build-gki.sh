@@ -90,7 +90,9 @@ gki_defconfig="common/arch/arm64/configs/gki_defconfig"
 droidspaces_configs=(
   SYSVIPC POSIX_MQUEUE IPC_NS PID_NS DEVTMPFS
   NETFILTER_XT_MATCH_ADDRTYPE USER_NS
-  NETFILTER_XT_TARGET_REJECT NETFILTER_XT_TARGET_LOG
+  IP_NF_IPTABLES IP_NF_FILTER IP_NF_TARGET_REJECT
+  IP6_NF_IPTABLES IP6_NF_FILTER IP6_NF_TARGET_REJECT
+  NETFILTER_XT_TARGET_LOG
   NETFILTER_XT_MATCH_RECENT IP_SET IP_SET_HASH_IP IP_SET_HASH_NET
   NETFILTER_XT_SET TMPFS_POSIX_ACL TMPFS_XATTR
   BINFMT_MISC BINFMT_SCRIPT BINFMT_ELF
@@ -142,7 +144,11 @@ test -n "$image_path"
 config_path="$(find out -type f -name .config -print -quit)"
 test -n "$config_path"
 for config_name in "${droidspaces_configs[@]}"; do
-  grep -qx "CONFIG_${config_name}=y" "$config_path"
+  if ! grep -qx "CONFIG_${config_name}=y" "$config_path"; then
+    echo "Required Droidspaces config was not built as y: CONFIG_${config_name}" >&2
+    grep -E "^(# )?CONFIG_${config_name}(=| )" "$config_path" >&2 || true
+    exit 1
+  fi
 done
 
 kernel_release_path="$(find out -type f -name kernel.release -print -quit)"
